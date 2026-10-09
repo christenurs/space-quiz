@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Space Exploration Quiz</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7ff;
+      --panel: #ffffff;
+      --text: #1b2340;
+      --muted: #5e6788;
+      --accent: #3f7dff;
+      --accent-2: #7a4dff;
+      --good: #17b35d;
+      --bad: #e5484d;
+      --bar-bg: #dce2ff;
+      --ring: rgba(63, 125, 255, 0.22);
+      --shadow: 0 14px 40px rgba(37, 60, 135, 0.14);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1222;
+        --panel: #141b30;
+        --text: #e8ecff;
+        --muted: #a8b2d9;
+        --accent: #7ba8ff;
+        --accent-2: #af8cff;
+        --good: #38d57a;
+        --bad: #ff6b78;
+        --bar-bg: #2a3458;
+        --ring: rgba(123, 168, 255, 0.28);
+        --shadow: 0 20px 46px rgba(0, 0, 0, 0.45);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 10%, rgba(122, 77, 255, 0.2) 0 16%, transparent 50%),
+        radial-gradient(circle at 84% 0%, rgba(63, 125, 255, 0.2) 0 15%, transparent 50%),
+        var(--bg);
+    }
+
+    .quiz-wrap {
+      width: min(94vw, 560px);
+      background: var(--panel);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+      overflow: hidden;
+    }
+
+    .top {
+      padding: 18px 20px 10px;
+      background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 18%, transparent), color-mix(in srgb, var(--accent-2) 18%, transparent));
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: baseline;
+    }
+
+    h1 {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      padding: 0.4rem 0.72rem;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--accent) 13%, var(--panel)), color-mix(in srgb, var(--accent-2) 13%, var(--panel)));
+      box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, white 22%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent);
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.3;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    h1::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          -9deg,
+          transparent 0 11px,
+          color-mix(in srgb, var(--accent) 16%, transparent) 11px 12px
+        );
+      opacity: 0.48;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .score {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: var(--bar-bg);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 360ms ease;
+    }
+
+    .content {
+      padding: 18px 20px 20px;
+    }
+
+    .question {
+      font-size: 1.05rem;
+      margin: 0 0 16px;
+    }
+
+    .answers {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .answer-btn, .next-btn, .restart-btn {
+      border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      background: color-mix(in srgb, var(--panel) 90%, var(--accent) 10%);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 130ms ease, border-color 130ms ease, box-shadow 130ms ease, background-color 130ms ease;
+    }
+
+    .answer-btn:hover:not(:disabled),
+    .next-btn:hover,
+    .restart-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+
+    .answer-btn:focus-visible,
+    .next-btn:focus-visible,
+    .restart-btn:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 60%, white 40%);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px var(--ring);
+    }
+
+    .answer-btn:disabled {
+      cursor: default;
+      opacity: 0.92;
+    }
+
+    .answer-btn.correct {
+      border-color: color-mix(in srgb, var(--good) 80%, white 20%);
+      background: color-mix(in srgb, var(--good) 20%, var(--panel));
+    }
+
+    .answer-btn.wrong {
+      border-color: color-mix(in srgb, var(--bad) 82%, white 18%);
+      background: color-mix(in srgb, var(--bad) 16%, var(--panel));
+    }
+
+    .feedback {
+      min-height: 24px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .feedback.good {
+      color: var(--good);
+    }
+
+    .feedback.bad {
+      color: var(--bad);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .next-btn, .restart-btn {
+      text-align: center;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: white;
+      border: none;
+      font-weight: 600;
+      min-width: 120px;
+      padding: 10px 14px;
+    }
+
+    .next-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .card-flash-good {
+      animation: greenFlash 600ms ease;
+    }
+
+    .card-shake-bad {
+      animation: redShake 440ms ease;
+    }
+
+    @keyframes greenFlash {
+      0% { box-shadow: var(--shadow), 0 0 0 0 color-mix(in srgb, var(--good) 45%, transparent); }
+      35% { box-shadow: var(--shadow), 0 0 0 12px color-mix(in srgb, var(--good) 0%, transparent); }
+      100% { box-shadow: var(--shadow), 0 0 0 0 transparent; }
+    }
+
+    @keyframes redShake {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-7px); }
+      30% { transform: translateX(6px); }
+      45% { transform: translateX(-6px); }
+      60% { transform: translateX(4px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    .result {
+      text-align: center;
+      padding: 6px 0 2px;
+    }
+
+    .result-emoji {
+      font-size: 2.3rem;
+      line-height: 1;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .result h2 {
+      margin: 0 0 8px;
+      font-size: 1.28rem;
+    }
+
+    .result p {
+      margin: 0 0 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main class="quiz-wrap" id="quizCard">
+    <section class="top">
+      <div class="title-row">
+        <h1>🚀 Space Exploration Quiz</h1>
+        <div class="score" id="scoreLabel">Score: 0</div>
+      </div>
+      <div class="meta">
+        <span id="progressLabel">Question 1 of 10</span>
+        <span id="percentLabel">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </section>
+
+    <section class="content" id="content"></section>
+  </main>
+
+  <script>
+    const quizData = [
+      {
+        question: "Which was the first artificial satellite launched into space?",
+        options: ["Sputnik 1", "Explorer 1", "Vostok 1", "Luna 2"],
+        answer: "Sputnik 1"
+      },
+      {
+        question: "Which planet in our solar system has the most known moons?",
+        options: ["Jupiter", "Saturn", "Uranus", "Neptune"],
+        answer: "Saturn"
+      },
+      {
+        question: "What is the name of NASA's most powerful rocket used for Artemis missions?",
+        options: ["Falcon Heavy", "Space Launch System", "Atlas V", "Delta IV Heavy"],
+        answer: "Space Launch System"
+      },
+      {
+        question: "Who was the first person to walk on the Moon?",
+        options: ["Buzz Aldrin", "Yuri Gagarin", "Neil Armstrong", "Michael Collins"],
+        answer: "Neil Armstrong"
+      },
+      {
+        question: "Which rover discovered signs of ancient lakebeds in Jezero Crater on Mars?",
+        options: ["Curiosity", "Spirit", "Opportunity", "Perseverance"],
+        answer: "Perseverance"
+      },
+      {
+        question: "What protects Earth from much of the solar wind?",
+        options: ["Ozone layer", "Magnetosphere", "Troposphere", "Asteroid belt"],
+        answer: "Magnetosphere"
+      },
+      {
+        question: "What is the name of the telescope launched in 2021 to observe the early universe?",
+        options: ["Hubble Space Telescope", "Chandra", "James Webb Space Telescope", "Kepler"],
+        answer: "James Webb Space Telescope"
+      },
+      {
+        question: "Which mission first successfully landed humans on the Moon?",
+        options: ["Apollo 8", "Apollo 10", "Apollo 11", "Apollo 12"],
+        answer: "Apollo 11"
+      },
+      {
+        question: "What is the boundary called where stars can orbit a black hole without escaping?",
+        options: ["Photon sphere", "Event horizon", "Roche limit", "Heliosheath"],
+        answer: "Event horizon"
+      },
+      {
+        question: "Which spacecraft has traveled the farthest from Earth?",
+        options: ["Voyager 1", "Voyager 2", "Pioneer 10", "New Horizons"],
+        answer: "Voyager 1"
+      }
+    ];
+
+    const total = quizData.length;
+    const contentEl = document.getElementById("content");
+    const scoreEl = document.getElementById("scoreLabel");
+    const progressLabelEl = document.getElementById("progressLabel");
+    const percentLabelEl = document.getElementById("percentLabel");
+    const progressFillEl = document.getElementById("progressFill");
+    const cardEl = document.getElementById("quizCard");
+
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+    let keyboardHandler = null;
+
+    function updateTopBar() {
+      const answeredCount = currentIndex;
+      const pct = Math.round((answeredCount / total) * 100);
+      scoreEl.textContent = `Score: ${score}`;
+      progressLabelEl.textContent = `Question ${Math.min(currentIndex + 1, total)} of ${total}`;
+      percentLabelEl.textContent = `${pct}%`;
+      progressFillEl.style.width = `${pct}%`;
+    }
+
+    function triggerFeedback(isCorrect) {
+      cardEl.classList.remove("card-flash-good", "card-shake-bad");
+      void cardEl.offsetWidth;
+      cardEl.classList.add(isCorrect ? "card-flash-good" : "card-shake-bad");
+    }
+
+    function renderQuestion() {
+      updateTopBar();
+      answered = false;
+      const q = quizData[currentIndex];
+
+      contentEl.innerHTML = `
+        <h2 class="question">${q.question}</h2>
+        <div class="answers" id="answers"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="controls">
+          <button class="next-btn" id="nextBtn" disabled>${currentIndex === total - 1 ? "See Results" : "Next Question"}</button>
+        </div>
+      `;
+
+      const answersEl = document.getElementById("answers");
+      const feedbackEl = document.getElementById("feedback");
+      const nextBtn = document.getElementById("nextBtn");
+
+      const answerButtons = [];
+
+      q.options.forEach((option) => {
+        const btn = document.createElement("button");
+        btn.className = "answer-btn";
+        btn.type = "button";
+        btn.textContent = option;
+        btn.setAttribute("aria-label", `Answer: ${option}`);
+        btn.addEventListener("click", () => {
+          if (answered) return;
+          answered = true;
+
+          const correct = option === q.answer;
+          if (correct) {
+            score += 1;
+            btn.classList.add("correct");
+            feedbackEl.textContent = "✅ Correct! Stellar work.";
+            feedbackEl.className = "feedback good";
+          } else {
+            btn.classList.add("wrong");
+            feedbackEl.textContent = `❌ Not quite. Correct answer: ${q.answer}`;
+            feedbackEl.className = "feedback bad";
+          }
+
+          [...answersEl.children].forEach((el) => {
+            const isAnswer = el.textContent === q.answer;
+            el.disabled = true;
+            if (isAnswer) el.classList.add("correct");
+          });
+
+          scoreEl.textContent = `Score: ${score}`;
+          nextBtn.disabled = false;
+          nextBtn.focus();
+          triggerFeedback(correct);
+        });
+        answerButtons.push(btn);
+        answersEl.appendChild(btn);
+      });
+
+      if (keyboardHandler) {
+        document.removeEventListener("keydown", keyboardHandler);
+      }
+
+      keyboardHandler = (event) => {
+        const answerList = [...document.querySelectorAll(".answer-btn")];
+        if (!answerList.length) return;
+
+        const activeAnswerIndex = answerList.findIndex((button) => button === document.activeElement);
+        const isAnswerFocused = activeAnswerIndex >= 0;
+
+        if ((event.key === "ArrowDown" || event.key === "ArrowRight") && isAnswerFocused) {
+          event.preventDefault();
+          answerList[(activeAnswerIndex + 1) % answerList.length].focus();
+          return;
+        }
+
+        if ((event.key === "ArrowUp" || event.key === "ArrowLeft") && isAnswerFocused) {
+          event.preventDefault();
+          answerList[(activeAnswerIndex - 1 + answerList.length) % answerList.length].focus();
+          return;
+        }
+
+        if ((event.key === "Enter" || event.key === " ") && isAnswerFocused) {
+          event.preventDefault();
+          document.activeElement.click();
+          return;
+        }
+
+        if (document.activeElement === nextBtn && !nextBtn.disabled && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          nextBtn.click();
+        }
+      };
+
+      document.addEventListener("keydown", keyboardHandler);
+
+      nextBtn.addEventListener("click", () => {
+        if (!answered) return;
+        currentIndex += 1;
+        if (currentIndex < total) {
+          renderQuestion();
+        } else {
+          renderResults();
+        }
+      });
+
+      if (answerButtons.length > 0) {
+        answerButtons[0].focus();
+      }
+    }
+
+    function resultEmoji(scoreValue, max) {
+      const ratio = scoreValue / max;
+      if (ratio === 1) return "🏆";
+      if (ratio >= 0.8) return "🚀";
+      if (ratio >= 0.5) return "🙂";
+      return "🛰️";
+    }
+
+    function resultMessage(scoreValue, max) {
+      const ratio = scoreValue / max;
+      if (ratio === 1) return "Perfect score! Mission control is impressed.";
+      if (ratio >= 0.8) return "Excellent run! You know your space history.";
+      if (ratio >= 0.5) return "Nice effort! You're on a great trajectory.";
+      return "Good start! Refuel and try another launch.";
+    }
+
+    function renderResults() {
+      progressLabelEl.textContent = `Question ${total} of ${total}`;
+      percentLabelEl.textContent = "100%";
+      progressFillEl.style.width = "100%";
+      scoreEl.textContent = `Score: ${score}`;
+
+      contentEl.innerHTML = `
+        <div class="result">
+          <span class="result-emoji">${resultEmoji(score, total)}</span>
+          <h2>Quiz Complete!</h2>
+          <p>You scored <strong>${score}</strong> out of <strong>${total}</strong>.</p>
+          <p>${resultMessage(score, total)}</p>
+          <button class="restart-btn" id="restartBtn">Play Again</button>
+        </div>
+      `;
+
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        currentIndex = 0;
+        score = 0;
+        renderQuestion();
+      });
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
